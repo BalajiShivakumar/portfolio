@@ -33,26 +33,26 @@ const featureCards = [
     moreInfo: ["EVENTS: 12 Sessions", "AUDIENCE: 300 Developers", "FORMAT: Bi-monthly"],
   },
   {
-    title: "Scaling Full Stack Products",
+    title: "Decomposition of Monolith to Microservices and Security Analysis",
     description:
-      "A deep dive into how I architect resilient frontend and backend systems for growth-stage applications.",
+      "This research addresses the security challenges encountered during the decomposition of monolithic applications into microservices.",
     highlights: [
-      "ROLE: Product Engineer",
-      "STACK: TypeScript, Express, AWS",
+      "STACK: SECURITY",
+      "FOCUS: SECURITY ANALYSIS AND DECOMPOSITION",
       "IMPACT: Improved performance and scalability for production systems",
     ],
-    moreInfo: ["THROUGHPUT: 35% Improvement", "RELIABILITY: 99.9% Uptime", "OWNERSHIP: End-to-end"],
+    moreInfo: ["YEAR: 2024","OWNERSHIP: End-to-end", "Focusing on vulnerabilities highlighted by the OWASP Top 10 and standard security metrics. Using automated tools like Mono2Micro for system decomposition and SonarQube, Snyk, and Docker Scout for comprehensive security analysis, vulnerabilities were identified and mitigated in both architectural styles. The study further implemented a deep learning-based solution, VulDeepScannerMonoMicro, which enhanced the detection of complex security issues. This approach integrated deep learning models with automated analysis tools, significantly improving vulnerability detection accuracy. The findings underscore the importance of prioritizing security as a core consideration in architectural transitions from monolithic to microservices"],
   },
   {
-    title: "Designing Better User Flows",
+    title: "Clinical Management System using ASP.NET MVC (NET 6.0)",
     description:
-      "Case-study driven walkthroughs on improving UX, accessibility, and conversion with practical design decisions.",
+      "The Clinical Management System is a web application built with ASP.NET MVC",
     highlights: [
-      "ROLE: UX-Focused Developer",
+      "STACK: UX-Focused Developer",
       "FOCUS: Accessibility and conversion optimization",
       "IMPACT: Improved usability and task completion rates",
     ],
-    moreInfo: ["A/B TESTS: 8 Iterations", "ACCESSIBILITY: WCAG-oriented", "RESULT: Better Engagement"],
+    moreInfo: ["A/B TESTS: 8 Iterations", "ACCESSIBILITY: WCAG-oriented", "RESULT: Better Engagement", "The Clinical Management System is a web application built with ASP.NET MVC, Entity Framework Core, and MS SQL that streamlines clinic operations by enabling patients to view doctor availability and book appointments accordingly. Utilizing MVC architecture, the system organizes features like authentication and role-based access with ASP.NET Core Identity, ensuring secure access for both administrators and patients. A central dashboard, crafted with Bootstrap, HTML, CSS, and JavaScript, offers a responsive interface where patients can manage bookings and administrators oversee clinic resources. The MS SQL database is seeded with physician schedules, enabling quick appointment bookings aligned with doctor availability. Entity Framework Core manages data interactions, while JavaScript enhances dashboard interactivity."],
   },
 ];
 
@@ -62,7 +62,7 @@ const experienceRows = [
     body: "Built frontend features, optimized API integrations, and improved app performance across responsive devices.",
     links: [
       "COMPANY: MICROSOFT",
-      "TEAM: AZURE NETWORKING",
+      "TEAM: AZURE HYPERSCALE NETWORKING",
       "DURATION: MARCH 2025 - PRESENT",
     ],
     contribution:
@@ -274,7 +274,7 @@ function App() {
             SIVAKUMAR<span className="pixel">  -  Software Engineer</span>
           </h1>
           <p>
-            Software Engineer on the Azure Physical Networking team,focuses on building reliable, secure, and scalable software systems that support large‑scale Azure infrastructure and delivered reliable backend components and internal tooling. Has strong hands‑on experience in software development and system design, with skills spanning Azure Cloud, Virtual Networks, Network Architecture, CI/CD pipelines, automation engineering, and incident management. Skilled at transforming ambiguous problem statements into measurable MVPs, instrumenting changes end-to-end, and standardizing build readiness for faster, safer releases. Actively working on AI security agents and service intelligence platforms, focusing on secure LLM integration
+            Software Engineer on the Azure Physical Networking team,focuses on building reliable, secure, and scalable software systems that support large‑scale Azure infrastructure and delivered reliable backend components and internal tooling. Has strong hands‑on experience in software development and system design, with skills spanning Azure Cloud, Virtual Networks, Network Architecture, CI/CD pipelines, automation engineering, and incident management. Skilled at transforming ambiguous problem statements into measurable MVPs, instrumenting changes end-to-end, and standardizing build readiness for faster, safer releases. Actively working on AI security agents and service intelligence platforms, focusing on secure LLM integration.
           </p>
         </div>
         <div className="hero-icons">
@@ -394,7 +394,22 @@ function App() {
               <div className="wireframe" />
               <div className="feature-copy">
                 <h3>
-                  {card.title} <span>&#8599;</span>
+                  <button
+                    type="button"
+                    className="project-title-trigger"
+                    aria-label={`Open details for ${card.title}`}
+                    onClick={() => openProjectPrompt(card)}
+                  >
+                    {card.title}
+                  </button>{" "}
+                  <button
+                    type="button"
+                    className="project-title-arrow"
+                    aria-label={`Show more info about ${card.title}`}
+                    onClick={() => openProjectPrompt(card)}
+                  >
+                    ↗
+                  </button>
                 </h3>
                 <p>{card.description}</p>
                 <div className="project-content-box">
@@ -403,16 +418,6 @@ function App() {
                       {item}
                     </p>
                   ))}
-                  <div className="project-more-info">
-                    <button
-                      type="button"
-                      className="project-info-trigger"
-                      aria-label={`Show more info about ${card.title}`}
-                      onClick={() => openProjectPrompt(card)}
-                    >
-                      ↗
-                    </button>
-                  </div>
                 </div>
               </div>
             </article>
@@ -495,19 +500,9 @@ function App() {
           <div>
             <p className="mono-title">/ SOCIAL</p>
             <div className="chip-row">
-              <ChipButton label="YOUTUBE" target="projects" />
               <ChipButton label="LINKEDIN" target="experience" />
-              <ChipButton label="GITHUB" target="skills" />
             </div>
           </div>
-          <div>
-              <p className="mono-title">/ RESOURCES</p>
-              <div className="chip-row">
-                <ChipButton label="CASE STUDIES" target="projects" />
-                <ChipButton label="CERTIFICATIONS" target="skills" />
-                <ChipButton label="BLOG POSTS" target="skills" />
-              </div>
-            </div>
         </div>
         <div className="footer-bottom">
           <div className="brand">
