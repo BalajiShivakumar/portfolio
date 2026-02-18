@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const topLinks = [
   { label: "ABOUT", target: "about" },
@@ -156,6 +156,36 @@ const feedItems = [
     type: "SKILL",
     topic: "Full Stack",
   },
+  {
+    date: "2025.12.10",
+    title: "Azure Cloud",
+    type: "SKILL",
+    topic: "Cloud",
+  },
+  {
+    date: "2025.12.08",
+    title: "Python scripting",
+    type: "SKILL",
+    topic: "Programming",
+  },
+  {
+    date: "2025.12.06",
+    title: ".NET programming",
+    type: "SKILL",
+    topic: "Backend",
+  },
+  {
+    date: "2025.12.04",
+    title: "Design Documentation",
+    type: "SKILL",
+    topic: "Documentation",
+  },
+  {
+    date: "2025.12.02",
+    title: "API Designing",
+    type: "SKILL",
+    topic: "Architecture",
+  },
 ];
 
 function ChipButton({ label, target }) {
@@ -181,10 +211,7 @@ function App() {
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [activeProject, setActiveProject] = useState(null);
-  const [typeFilters, setTypeFilters] = useState({
-    CERTIFICATION: true,
-    SKILL: true,
-  });
+  const [selectedType, setSelectedType] = useState("CERTIFICATION");
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -222,23 +249,15 @@ function App() {
     }
   };
 
-  const toggleTypeFilter = (typeKey) => {
-    setTypeFilters((prev) => ({ ...prev, [typeKey]: !prev[typeKey] }));
-  };
+  const filteredFeedItems = feedItems.filter((item) => item.type === selectedType);
+  const skillRows = [];
 
-  const clearFilters = (event) => {
-    event.preventDefault();
-    setTypeFilters({ CERTIFICATION: false, SKILL: false });
-  };
-
-  const activeTypeFilters = Object.entries(typeFilters)
-    .filter(([, isEnabled]) => isEnabled)
-    .map(([type]) => type);
-
-  const filteredFeedItems = feedItems.filter((item) => {
-    const typeMatch = activeTypeFilters.length > 0 && activeTypeFilters.includes(item.type);
-    return typeMatch;
-  });
+  if (selectedType === "SKILL") {
+    const skillTitles = filteredFeedItems.map((item) => item.title);
+    for (let index = 0; index < skillTitles.length; index += 3) {
+      skillRows.push(skillTitles.slice(index, index + 3));
+    }
+  }
 
   const openProjectPrompt = (card) => {
     setActiveProject(card);
@@ -248,14 +267,27 @@ function App() {
     setActiveProject(null);
   };
 
+  useEffect(() => {
+    if (!activeProject) {
+      return undefined;
+    }
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [activeProject]);
+
   return (
     <div className="page">
       <header className="top-bar">
         <div className="chip-row">
-          <span className="chip chip-square">&#9632;</span>
           {topLinks.map((item) => (
             <ChipButton key={item.label} label={item.label} target={item.target} />
           ))}
+          <ChipButton label="LINKEDIN" target="experience" />
         </div>
         <div className="top-actions">
           <button type="button" className="chip chip-btn resume-download" onClick={handleResumeDownload}>
@@ -277,10 +309,6 @@ function App() {
             Software Engineer on the Azure Physical Networking team,focuses on building reliable, secure, and scalable software systems that support large‑scale Azure infrastructure and delivered reliable backend components and internal tooling. Has strong hands‑on experience in software development and system design, with skills spanning Azure Cloud, Virtual Networks, Network Architecture, CI/CD pipelines, automation engineering, and incident management. Skilled at transforming ambiguous problem statements into measurable MVPs, instrumenting changes end-to-end, and standardizing build readiness for faster, safer releases. Actively working on AI security agents and service intelligence platforms, focusing on secure LLM integration.
           </p>
         </div>
-        <div className="hero-icons">
-          <span className="circle">◎</span>
-          <span className="circle">DEV</span>
-        </div>
       </section>
 
       <section className="topics" id="experience">
@@ -289,7 +317,6 @@ function App() {
           <article key={row.title} className="topic-row experience-row">
             <div className="topic-left">
               <h2>{row.title}</h2>
-              <p>{row.body}</p>
               <div className="topic-right experience-links-inline">
                 {row.links.map((link) => (
                   <a key={link} href="#">
@@ -341,45 +368,76 @@ function App() {
         <div className="feed-table">
           <aside className="filters">
             <div className="filter-head">
-              <span>/ FILTER</span>
-              <a href="#" onClick={clearFilters}>
-                CLEAR_FILTERS
-              </a>
+              <span>.../ TYPE</span>
             </div>
             <div className="filter-block">
-              <p className="mono-title-sm">Type</p>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={typeFilters.CERTIFICATION}
-                  onChange={() => toggleTypeFilter("CERTIFICATION")}
-                />
-                Certification
-              </label>
-              <label>
-                <input type="checkbox" checked={typeFilters.SKILL} onChange={() => toggleTypeFilter("SKILL")} />
-                Skills
-              </label>
+              <p className="mono-title-sm"></p>
+              <div className="filter-toggle" role="tablist" aria-label="Type filter">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={selectedType === "CERTIFICATION"}
+                  className={`filter-toggle-btn ${selectedType === "CERTIFICATION" ? "is-active" : ""}`}
+                  onClick={() => setSelectedType("CERTIFICATION")}
+                >
+                  CERTIFICATION
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={selectedType === "SKILL"}
+                  className={`filter-toggle-btn ${selectedType === "SKILL" ? "is-active" : ""}`}
+                  onClick={() => setSelectedType("SKILL")}
+                >
+                  SKILLS
+                </button>
+              </div>
             </div>
           </aside>
           <div className={`feed-list ${filteredFeedItems.length > 6 ? "is-scrollable" : ""}`}>
-            <div className="feed-head-row">
-              <span>/ DATE</span>
-              <span>/ NAME</span>
-              <span>/ TYPE</span>
-            </div>
-            {filteredFeedItems.map((item) => (
-              <div key={item.title} className="feed-row">
-                <span className="feed-date">&#9632; {item.date}</span>
-                <span className="feed-name">{item.title}</span>
-                <span className="feed-type">{item.type}</span>
+            {selectedType === "CERTIFICATION" ? (
+              <div className="feed-head-row certification-layout">
+                <span>/ DATE</span>
+                <span>/ NAME</span>
               </div>
-            ))}
+            ) : (
+              <div className="feed-head-row skill-layout">
+                <span>/ SKILL</span>
+                <span>/ SKILL</span>
+                <span>/ SKILL</span>
+              </div>
+            )}
+            {selectedType === "CERTIFICATION" &&
+              filteredFeedItems.map((item) => (
+                <div key={item.title} className="feed-row certification-layout">
+                  <span className="feed-date">&#9632; {item.date}</span>
+                  <span className="feed-name">{item.title}</span>
+                </div>
+              ))}
+            {selectedType === "SKILL" &&
+              skillRows.map((row, rowIndex) => (
+                <div key={`skill-row-${rowIndex}`} className="feed-row skill-layout">
+                  {Array.from({ length: 3 }, (_, colIndex) => (
+                    <span key={`skill-cell-${rowIndex}-${colIndex}`} className="feed-skill-cell">
+                      {row[colIndex] ?? ""}
+                    </span>
+                  ))}
+                </div>
+              ))}
             {filteredFeedItems.length === 0 && (
-              <div className="feed-row">
-                <span className="feed-date">&#9632; --</span>
-                <span className="feed-name">No results found for selected filters.</span>
-                <span className="feed-type">-</span>
+              <div className={`feed-row ${selectedType === "CERTIFICATION" ? "certification-layout" : "skill-layout"}`}>
+                {selectedType === "CERTIFICATION" ? (
+                  <>
+                    <span className="feed-date">&#9632; --</span>
+                    <span className="feed-name">No results found for selected filters.</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="feed-skill-cell">No results found for selected filters.</span>
+                    <span className="feed-skill-cell" />
+                    <span className="feed-skill-cell" />
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -496,18 +554,8 @@ function App() {
             </form>
           </div>
         </div>
-        <div className="footer-links footer-links-bottom">
-          <div>
-            <p className="mono-title">/ SOCIAL</p>
-            <div className="chip-row">
-              <ChipButton label="LINKEDIN" target="experience" />
-            </div>
-          </div>
-        </div>
         <div className="footer-bottom">
           <div className="brand">
-            <span className="circle">◎</span>
-            <span className="circle">DEV</span>
             <span className="copyright">© 2026 YOUR NAME. ALL RIGHTS RESERVED.</span>
           </div>
         </div>
