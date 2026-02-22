@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+const CONTACT_RECIPIENT = "equinoxbalaji@gmail.com";
 
 const topLinks = [
   { label: "ABOUT", target: "about" },
@@ -10,28 +12,6 @@ const topLinks = [
 ];
 
 const featureCards = [
-  {
-    title: "Introducing Stripe Workflows",
-    description:
-      "A practical showcase of intelligent automation patterns I use when building product-grade workflows.",
-    highlights: [
-      "ROLE: Full Stack Engineer",
-      "STACK: React, Node.js, PostgreSQL",
-      "IMPACT: Reduced operational overhead by automating repetitive workflows",
-    ],
-    moreInfo: ["DURATION: 6 months", "TEAM: 4 Engineers", "STATUS: Production Live"],
-  },
-  {
-    title: "Join a local Developer Meetup",
-    description:
-      "A curated developer gathering where I share systems design, product strategy, and implementation details.",
-    highlights: [
-      "ROLE: Community Organizer",
-      "FOCUS: Technical talks and networking",
-      "IMPACT: Built a stronger local developer ecosystem",
-    ],
-    moreInfo: ["EVENTS: 12 Sessions", "AUDIENCE: 300 Developers", "FORMAT: Bi-monthly"],
-  },
   {
     title: "Decomposition of Monolith to Microservices and Security Analysis",
     description:
@@ -209,19 +189,60 @@ function App() {
     email: "",
     message: "",
   });
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState("idle");
+  const [submitError, setSubmitError] = useState("");
   const [activeProject, setActiveProject] = useState(null);
-  const [selectedType, setSelectedType] = useState("CERTIFICATION");
+  const [selectedType, setSelectedType] = useState("SKILL");
+  const [isExperienceInView, setIsExperienceInView] = useState(false);
+  const [aboutCueEnabledByIndex, setAboutCueEnabledByIndex] = useState([]);
+  const [aboutAtEndByIndex, setAboutAtEndByIndex] = useState([]);
+  const aboutBoxRefs = useRef([]);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setContactForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleContactSubmit = (event) => {
+  const handleContactSubmit = async (event) => {
     event.preventDefault();
-    setIsSubmitted(true);
-    setContactForm({ name: "", email: "", message: "" });
+    setSubmitStatus("submitting");
+    setSubmitError("");
+
+    try {
+      const payload = {
+        name: contactForm.name.trim(),
+        email: contactForm.email.trim(),
+        message: contactForm.message.trim(),
+        submittedAt: new Date().toISOString(),
+      };
+
+      const response = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(CONTACT_RECIPIENT)}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Accept: "application/json",
+        },
+        body: new URLSearchParams({
+          name: payload.name,
+          email: payload.email,
+          message: payload.message,
+          _subject: `Portfolio Contact from ${payload.name}`,
+          _captcha: "false",
+        }).toString(),
+      });
+
+      const data = response.ok ? await response.json() : null;
+      const isSuccess = response.ok && (data?.success === true || data?.success === "true");
+      if (!isSuccess) {
+        throw new Error(data?.message || "Form delivery was not accepted.");
+      }
+
+      setSubmitStatus("success");
+      setContactForm({ name: "", email: "", message: "" });
+    } catch (error) {
+      setSubmitStatus("error");
+      setSubmitError(`Message delivery failed. ${error instanceof Error ? error.message : "Please try again in a minute."}`);
+    }
   };
 
   const handleResumeDownload = async () => {
@@ -280,6 +301,83 @@ function App() {
     };
   }, [activeProject]);
 
+  useEffect(() => {
+    const experienceSection = document.getElementById("experience");
+    if (!experienceSection) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsExperienceInView(entry.isIntersecting);
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(experienceSection);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    const cueEnabled = [];
+    const atEnd = [];
+
+    experienceRows.forEach((_, index) => {
+      const node = aboutBoxRefs.current[index];
+      if (!node) {
+        cueEnabled[index] = false;
+        atEnd[index] = false;
+        return;
+      }
+      const isScrollable = node.scrollHeight > node.clientHeight;
+      const isAtEnd = node.scrollTop + node.clientHeight >= node.scrollHeight - 2;
+      cueEnabled[index] = isScrollable;
+      atEnd[index] = isScrollable && isAtEnd;
+    });
+
+    setAboutCueEnabledByIndex(cueEnabled);
+    setAboutAtEndByIndex(atEnd);
+  }, []);
+
+  const handleAboutBoxScroll = (index) => {
+    const node = aboutBoxRefs.current[index];
+    if (!node) {
+      return;
+    }
+
+    const isScrollable = node.scrollHeight > node.clientHeight;
+    const isAtEnd = node.scrollTop + node.clientHeight >= node.scrollHeight - 2;
+
+    setAboutCueEnabledByIndex((prev) => {
+      const next = [...prev];
+      next[index] = isScrollable;
+      return next;
+    });
+
+    setAboutAtEndByIndex((prev) => {
+      const next = [...prev];
+      next[index] = isScrollable && isAtEnd;
+      return next;
+    });
+  };
+
+  const handleAboutCueClick = (index) => {
+    const node = aboutBoxRefs.current[index];
+    if (!node) {
+      return;
+    }
+
+    if (aboutAtEndByIndex[index]) {
+      node.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    node.scrollTo({ top: node.scrollHeight, behavior: "smooth" });
+  };
+
   return (
     <div className="page">
       <header className="top-bar">
@@ -313,30 +411,48 @@ function App() {
 
       <section className="topics" id="experience">
         <div className="mono-title">/ EXPERIENCE</div>
-        {experienceRows.map((row) => (
+        {experienceRows.map((row, index) => (
           <article key={row.title} className="topic-row experience-row">
             <div className="topic-left">
               <h2>{row.title}</h2>
               <div className="topic-right experience-links-inline">
                 {row.links.map((link) => (
-                  <a key={link} href="#">
+                  <div key={link} className="topic-link-static">
                     <span className="bullet">&#9632;</span>
                     <span>{link}</span>
-                  </a>
+                  </div>
                 ))}
               </div>
             </div>
             <div className="topic-right experience-right">
-              <div className="about-box">
-                <p className="mono-title-sm">ABOUT THIS ROLE</p>
-                <ul className="about-text about-points">
-                  {row.contribution
-                    .split(/(?<=[.!?])\s+/)
-                    .filter((point) => point.trim().length > 0)
-                    .map((point) => (
-                      <li key={point}>{point.trim()}</li>
-                    ))}
-                </ul>
+              <div className="about-scroll-wrap">
+                <div
+                  className="about-box"
+                  ref={(node) => {
+                    aboutBoxRefs.current[index] = node;
+                  }}
+                  onScroll={() => handleAboutBoxScroll(index)}
+                >
+                  <p className="mono-title-sm">ABOUT THIS ROLE</p>
+                  <ul className="about-text about-points">
+                    {row.contribution
+                      .split(/(?<=[.!?])\s+/)
+                      .filter((point) => point.trim().length > 0)
+                      .map((point) => (
+                        <li key={point}>{point.trim()}</li>
+                      ))}
+                  </ul>
+                </div>
+                <button
+                  type="button"
+                  className={`about-scroll-cue ${
+                    isExperienceInView && aboutCueEnabledByIndex[index] ? "is-visible" : ""
+                  }`}
+                  onClick={() => handleAboutCueClick(index)}
+                  aria-label={aboutAtEndByIndex[index] ? "Scroll to top of about this role" : "Scroll to end of about this role"}
+                >
+                  {aboutAtEndByIndex[index] ? "↑" : "↓"}
+                </button>
               </div>
             </div>
           </article>
@@ -353,10 +469,10 @@ function App() {
             </div>
             <div className="topic-right">
               {row.links.map((link) => (
-                <a key={link} href="#">
+                <div key={link} className="topic-link-static">
                   <span className="bullet">&#9632;</span>
                   <span>{link}</span>
-                </a>
+                </div>
               ))}
             </div>
           </article>
@@ -547,10 +663,11 @@ function App() {
                 />
               </label>
 
-              <button type="submit" className="pill-btn contact-submit">
-                SUBMIT
+              <button type="submit" className="pill-btn contact-submit" disabled={submitStatus === "submitting"}>
+                {submitStatus === "submitting" ? "SENDING..." : "SUBMIT"}
               </button>
-              {isSubmitted && <p className="submit-note">Thanks. Your message has been submitted.</p>}
+              {submitStatus === "success" && <p className="submit-note">Thanks. Your message has been submitted.</p>}
+              {submitStatus === "error" && <p className="submit-note submit-note-error">{submitError}</p>}
             </form>
           </div>
         </div>
